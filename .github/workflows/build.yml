@@ -21,13 +21,18 @@ jobs:
       - name: Install Theos + SDK (Linux)
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq make git perl python3 xz-utils rsync fakeroot curl unzip
+          sudo apt-get install -y -qq make git perl python3 xz-utils rsync fakeroot curl unzip libtinfo6
           sudo curl -L -o /usr/local/bin/ldid \
             https://github.com/ProcursusTeam/ldid/releases/latest/download/ldid_linux_x86_64
           sudo chmod +x /usr/local/bin/ldid
           git clone --recursive https://github.com/theos/theos.git ~/theos
           git clone --recursive https://github.com/OwnGoalStudio/theos-roothide.git ~/theos-roothide \
             || git clone --recursive https://github.com/roothide/theos.git ~/theos-roothide
+          curl -sL -o /tmp/tc.tar.xz \
+            https://github.com/L1ghtmann/llvm-project/releases/latest/download/iOSToolchain-x86_64.tar.xz
+          tar -xJf /tmp/tc.tar.xz -C ~/theos/toolchain/
+          tar -xJf /tmp/tc.tar.xz -C ~/theos-roothide/toolchain/
+          ~/theos/toolchain/linux/iphone/bin/clang --version | head -1
           git clone --depth 1 --filter=blob:none --sparse https://github.com/theos/sdks.git ~/sdks
           git -C ~/sdks sparse-checkout set iPhoneOS16.5.sdk
           mkdir -p ~/theos/sdks ~/theos-roothide/sdks
