@@ -1,0 +1,74 @@
+name: Build FudaiHelper (private source)
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: '要发布的 tag(如 v1.0.7)'
+        required: true
+        default: 'v1.0.7'
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Pull private source
+        run: |
+          git clone --recursive --branch "${{ inputs.tag }}" \
+            "https://x-access-token:${{ secrets.SRC_TOKEN }}@github.com/liudubin/douyin-fudai-helper.git" src
+          cd src && ls
+
+      - name: Install Theos + SDK (Linux)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq make git perl python3 xz-utils rsync fakeroot curl unzip
+          sudo curl -L -o /usr/local/bin/ldid \
+            https://github.com/ProcursusTeam/ldid/releases/latest/download/ldid_linux_x86_64
+          sudo chmod +x /usr/local/bin/ldid
+          git clone --recursive https://github.com/theos/theos.git ~/theos
+          git clone --recursive https://github.com/OwnGoalStudio/theos-roothide.git ~/theos-roothide \
+            || git clone --recursive https://github.com/roothide/theos.git ~/theos-roothide
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/theos/sdks.git ~/sdks
+          git -C ~/sdks sparse-checkout set iPhoneOS16.5.sdk
+          mkdir -p ~/theos/sdks ~/theos-roothide/sdks
+          ln -s ~/sdks/iPhoneOS16.5.sdk ~/theos/sdks/iPhoneOS16.5.sdk
+          ln -s ~/sdks/iPhoneOS16.5.sdk ~/theos-roothide/sdks/iPhoneOS16.5.sdk
+
+      - name: Build (rootless, Dopamine)
+        working-directory: src
+        run: |
+          export THEOS=~/theos
+          VER=$(grep '^Version:' control | awk '{print $2}')
+          sed -i 's/^Name:.*/Name: 抖音福袋助手 (rootless-Dopamine)/' control
+          sed -i 's/^Description:.*/Description: 越狱插件 | 适配 Dopamine 等 rootless 越狱;Relaxin\/RootHide 请用 roothide 包。抖音直播间福袋:自动参与\/口令\/巡逻\/中奖提醒/' control
+          rm -rf packages obj
+          make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless
+          cp packages/*.deb "fudaihelper-rootless-v${VER}-Dopamine.deb"
+
+      - name: Build (roothide, Relaxin/RootHide)
+        working-directory: src
+        run: |
+          if [ ! -d ~/theos-roothide/makefiles ]; then
+            echo "roothide_theos unavailable, skip"
+            exit 0
+          fi
+          export THEOS=~/theos-roothide
+          VER=$(grep '^Version:' control | awk '{print $2}')
+          sed -i 's/^Name:.*/Name: 抖音福袋助手 (roothide-Relaxin)/' control
+          sed -i 's/^Description:.*/Description: 越狱插件 | 适配 Relaxin\/RootHide Bootstrap 越狱;Dopamine 请用 rootless 包。抖音直播间福袋:自动参与\/口令\/巡逻\/中奖提醒/' control
+          rm -rf packages obj
+          make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=roothide
+          cp packages/*.deb "fudaihelper-roothide-v${VER}-Relaxin.deb"
+
+      - name: Release to private repo
+        working-directory: src
+        env:
+          GH_TOKEN: ${{ secrets.SRC_TOKEN }}
+        run: |
+          VER=$(grep '^Version:' control | awk '{print $2}')
+          TAG="${{ inputs.tag }}"
+          gh release create "$TAG" \
+            --repo liudubin/douyin-fudai-helper \
+            --title "福袋助手 v${VER}" \
+            --notes-file CHANGELOG.md || true
+          gh release upload "$TAG" fudaihelper-*.deb --repo liudubin/douyin-fudai-helper --clobber
