@@ -44,11 +44,11 @@ jobs:
         run: |
           export THEOS=~/theos
           VER=$(grep '^Version:' control | awk '{print $2}')
-          sed -i 's/^Name:.*/Name: 抖音福袋助手 (rootless-Dopamine)/' control
-          sed -i 's/^Description:.*/Description: 越狱插件 | 适配 Dopamine 等 rootless 越狱;Relaxin\/RootHide 请用 roothide 包。抖音直播间福袋:自动参与\/口令\/巡逻\/中奖提醒/' control
+          sed -i 's/^Name:.*/Name: 抖音福袋助手 (Dopamine)/' control
+          sed -i 's/^Description:.*/Description: 越狱插件 | 适配 Dopamine 等 rootless 越狱;Relaxin\/RootHide 请用 Relaxin 包。抖音直播间福袋:自动参与\/口令\/巡逻\/中奖提醒/' control
           rm -rf packages obj
           make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless
-          cp packages/*.deb "fudaihelper-rootless-v${VER}-Dopamine.deb"
+          cp packages/*.deb "fudaihelper-v${VER}-Dopamine.deb"
 
       - name: Build (roothide, Relaxin/RootHide)
         working-directory: src
@@ -59,11 +59,11 @@ jobs:
           fi
           export THEOS=~/theos-roothide
           VER=$(grep '^Version:' control | awk '{print $2}')
-          sed -i 's/^Name:.*/Name: 抖音福袋助手 (roothide-Relaxin)/' control
-          sed -i 's/^Description:.*/Description: 越狱插件 | 适配 Relaxin\/RootHide Bootstrap 越狱;Dopamine 请用 rootless 包。抖音直播间福袋:自动参与\/口令\/巡逻\/中奖提醒/' control
+          sed -i 's/^Name:.*/Name: 抖音福袋助手 (Relaxin)/' control
+          sed -i 's/^Description:.*/Description: 越狱插件 | 适配 Relaxin\/RootHide Bootstrap 越狱;Dopamine 请用 Dopamine 包。抖音直播间福袋:自动参与\/口令\/巡逻\/中奖提醒/' control
           rm -rf packages obj
           make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=roothide
-          cp packages/*.deb "fudaihelper-roothide-v${VER}-Relaxin.deb"
+          cp packages/*.deb "fudaihelper-v${VER}-Relaxin.deb"
 
       - name: Release to private repo
         working-directory: src
