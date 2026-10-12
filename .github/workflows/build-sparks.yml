@@ -1,0 +1,77 @@
+name: Build SparksHelper (private source)
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: '要发布的 tag(如 v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Pull private source
+        run: |
+          git clone --recursive --branch "${{ inputs.tag }}" \
+            "https://x-access-token:${{ secrets.SRC_TOKEN }}@github.com/liudubin/douyin-sparks-helper.git" src
+          cd src && ls
+
+      - name: Install Theos + SDK (Linux)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq make git perl python3 xz-utils rsync fakeroot curl unzip libtinfo6
+          sudo curl -L -o /usr/local/bin/ldid \
+            https://github.com/ProcursusTeam/ldid/releases/latest/download/ldid_linux_x86_64
+          sudo chmod +x /usr/local/bin/ldid
+          git clone --recursive https://github.com/theos/theos.git ~/theos
+          git clone --recursive https://github.com/OwnGoalStudio/theos-roothide.git ~/theos-roothide \
+            || git clone --recursive https://github.com/roothide/theos.git ~/theos-roothide
+          curl -sL -o /tmp/tc.tar.xz \
+            https://github.com/L1ghtmann/llvm-project/releases/latest/download/iOSToolchain-x86_64.tar.xz
+          tar -xJf /tmp/tc.tar.xz -C ~/theos/toolchain/
+          tar -xJf /tmp/tc.tar.xz -C ~/theos-roothide/toolchain/
+          ~/theos/toolchain/linux/iphone/bin/clang --version | head -1
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/theos/sdks.git ~/sdks
+          git -C ~/sdks sparse-checkout set iPhoneOS16.5.sdk
+          mkdir -p ~/theos/sdks ~/theos-roothide/sdks
+          ln -s ~/sdks/iPhoneOS16.5.sdk ~/theos/sdks/iPhoneOS16.5.sdk
+          ln -s ~/sdks/iPhoneOS16.5.sdk ~/theos-roothide/sdks/iPhoneOS16.5.sdk
+
+      - name: Build (roothide, Relaxin/RootHide)
+        working-directory: src
+        run: |
+          if [ ! -d ~/theos-roothide/makefiles ]; then
+            echo "roothide_theos unavailable, fail"
+            exit 1
+          fi
+          export THEOS=~/theos-roothide
+          VER=$(grep '^Version:' control | awk '{print $2}')
+          sed -i 's/^Name:.*/Name: 抖音AI续火花助手 (Relaxin)/' control
+          rm -rf packages obj
+          make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=roothide
+          cp packages/*.deb "sparkshelper-v${VER}-Relaxin.deb"
+
+      - name: Build (rootless, Dopamine)
+        working-directory: src
+        run: |
+          export THEOS=~/theos
+          VER=$(grep '^Version:' control | awk '{print $2}')
+          sed -i 's/^Name:.*/Name: 抖音AI续火花助手 (Dopamine)/' control
+          rm -rf packages obj
+          make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless
+          cp packages/*.deb "sparkshelper-v${VER}-Dopamine.deb"
+
+      - name: Release to private repo
+        working-directory: src
+        env:
+          GH_TOKEN: ${{ secrets.SRC_TOKEN }}
+        run: |
+          VER=$(grep '^Version:' control | awk '{print $2}')
+          TAG="${{ inputs.tag }}"
+          gh release create "$TAG" \
+            --repo liudubin/douyin-sparks-helper \
+            --title "AI续火花助手 v${VER}" \
+            --notes-file CHANGELOG.md || true
+          gh release upload "$TAG" sparkshelper-*.deb --repo liudubin/douyin-sparks-helper --clobber
