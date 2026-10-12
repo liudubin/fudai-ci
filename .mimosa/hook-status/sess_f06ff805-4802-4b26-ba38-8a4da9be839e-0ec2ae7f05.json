@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "mimosa-hook-status/v1",
+  "recordedAt": "2026-10-11T14:56:44.353Z",
+  "sessionId": "sess_f06ff805-4802-4b26-ba38-8a4da9be839e",
+  "event": "PostToolUse",
+  "toolName": "Edit",
+  "file": "D:\\zhipu\\douyin-fudai-helper\\src\\FudaiPanel.m",
+  "outcome": "clear",
+  "coverage": "complete",
+  "findingCount": 0,
+  "durationMs": 4,
+  "hostState": "hook_complete",
+  "reportHint": ".mimosa/reports/"
+}
