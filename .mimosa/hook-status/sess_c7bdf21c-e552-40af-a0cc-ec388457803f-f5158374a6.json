@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "mimosa-hook-status/v1",
+  "recordedAt": "2026-10-13T11:10:53.859Z",
+  "sessionId": "sess_c7bdf21c-e552-40af-a0cc-ec388457803f",
+  "event": "PostToolUse",
+  "toolName": "Edit",
+  "file": "C:/Users/liudubin/.zcode/cli/memories/projects/zhipu-db16fa5abb0c5803/memory/douyin-sparks-helper-project.md",
+  "outcome": "clear",
+  "coverage": "complete",
+  "findingCount": 0,
+  "durationMs": 4,
+  "hostState": "hook_complete",
+  "reportHint": ".mimosa/reports/"
+}

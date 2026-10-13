@@ -65,27 +65,6 @@ jobs:
           make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=roothide
           cp packages/*.deb "fudaihelper-v${VER}-Relaxin.deb"
 
-      # 专属编号包:源仓库 bindings.txt 每行一个抖音号(可 # 注释),循环产出 fudaihelper-<编号>-vVER-Relaxin.deb
-      - name: Build per-binding packages (roothide)
-        working-directory: src
-        run: |
-          if [ ! -f bindings.txt ]; then echo "no bindings.txt, skip"; exit 0; fi
-          if [ ! -d ~/theos-roothide/makefiles ]; then echo "roothide theos unavailable, skip"; exit 0; fi
-          export THEOS=~/theos-roothide
-          VER=$(grep '^Version:' control | awk '{print $2}')
-          while IFS= read -r line || [ -n "$line" ]; do
-            line=$(echo "$line" | tr -d '\r' | sed 's/#.*//' | xargs)
-            [ -z "$line" ] && continue
-            NICK=$(echo "$line" | cut -d',' -f1)
-            [ -z "$NICK" ] && continue
-            echo "== building for nick: $NICK =="
-            git checkout -- control 2>/dev/null || true
-            rm -rf packages obj
-            FUDAI_NICK="$NICK" make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=roothide
-            cp packages/*.deb "fudaihelper-${NICK}-v${VER}-Relaxin.deb"
-          done < bindings.txt
-          git checkout -- control 2>/dev/null || true
-          ls fudaihelper-*.deb
 
       - name: Release to private repo
         working-directory: src
