@@ -75,3 +75,17 @@ jobs:
             --title "AI续火花助手 v${VER}" \
             --notes-file CHANGELOG.md || true
           gh release upload "$TAG" sparkshelper-*.deb --repo liudubin/douyin-sparks-helper --clobber
+
+      # 同步到本公开仓库 Release:插件内"检查更新"匿名下载用(私有仓库资产无法免鉴权下载)
+      - name: Mirror release to public repo
+        working-directory: src
+        env:
+          GH_TOKEN: ${{ secrets.SRC_TOKEN }}
+        run: |
+          VER=$(grep '^Version:' control | awk '{print $2}')
+          TAG="${{ inputs.tag }}"
+          gh release create "$TAG" \
+            --repo liudubin/fudai-ci \
+            --title "AI续火花助手 v${VER}" \
+            --notes-file CHANGELOG.md || true
+          gh release upload "$TAG" sparkshelper-*.deb --repo liudubin/fudai-ci --clobber
