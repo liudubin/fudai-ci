@@ -53,7 +53,7 @@ jobs:
           find /tmp -maxdepth 1 -name 'module-cache-*' -exec rm -rf {} + 2>/dev/null || true
           rm -rf ~/.cache/clang 2>/dev/null || true
           make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=roothide
-          cp packages/*.deb "抖音AI续火花助手_v${VER}_Relaxin.deb"
+          cp packages/*.deb "sparkshelper-v${VER}-Relaxin.deb"
 
       - name: Build (rootless, Dopamine)
         working-directory: src
@@ -65,7 +65,7 @@ jobs:
           find /tmp -maxdepth 1 -name 'module-cache-*' -exec rm -rf {} + 2>/dev/null || true
           rm -rf ~/.cache/clang 2>/dev/null || true
           make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless
-          cp packages/*.deb "抖音AI续火花助手_v${VER}_Dopamine.deb"
+          cp packages/*.deb "sparkshelper-v${VER}-Dopamine.deb"
 
       - name: Release to private repo
         working-directory: src
@@ -78,7 +78,15 @@ jobs:
             --repo liudubin/douyin-sparks-helper \
             --title "AI续火花助手 v${VER}" \
             --notes-file CHANGELOG.md || true
-          gh release upload "$TAG" 抖音AI续火花助手_*.deb --repo liudubin/douyin-sparks-helper --clobber
+          gh release upload "$TAG" sparkshelper-*.deb --repo liudubin/douyin-sparks-helper --clobber
+          # GitHub 会把资产文件名里的非 ASCII 清洗成点,中文只能放 label 展示
+          for scheme in Relaxin Dopamine; do
+            aid=$(gh api "repos/liudubin/douyin-sparks-helper/releases/tags/$TAG" \
+                  --jq ".assets[] | select(.name==\"sparkshelper-v${VER}-${scheme}.deb\") | .id")
+            [ -n "$aid" ] || continue
+            printf '{"label":"抖音AI续火花助手 v%s (%s)"}' "$VER" "$scheme" > /tmp/lbl.json
+            gh api -X PATCH "repos/liudubin/douyin-sparks-helper/releases/assets/$aid" --input /tmp/lbl.json
+          done
 
       # 同步到本公开仓库 Release:插件内"检查更新"匿名下载用(私有仓库资产无法免鉴权下载)
       - name: Mirror release to public repo
@@ -92,4 +100,11 @@ jobs:
             --repo liudubin/fudai-ci \
             --title "AI续火花助手 v${VER}" \
             --notes-file CHANGELOG.md || true
-          gh release upload "$TAG" 抖音AI续火花助手_*.deb --repo liudubin/fudai-ci --clobber
+          gh release upload "$TAG" sparkshelper-*.deb --repo liudubin/fudai-ci --clobber
+          for scheme in Relaxin Dopamine; do
+            aid=$(gh api "repos/liudubin/fudai-ci/releases/tags/$TAG" \
+                  --jq ".assets[] | select(.name==\"sparkshelper-v${VER}-${scheme}.deb\") | .id")
+            [ -n "$aid" ] || continue
+            printf '{"label":"抖音AI续火花助手 v%s (%s)"}' "$VER" "$scheme" > /tmp/lbl.json
+            gh api -X PATCH "repos/liudubin/fudai-ci/releases/assets/$aid" --input /tmp/lbl.json
+          done
