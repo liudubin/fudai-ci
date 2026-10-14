@@ -74,10 +74,12 @@ jobs:
         run: |
           VER=$(grep '^Version:' control | awk '{print $2}')
           TAG="${{ inputs.tag }}"
+          # 附加中文文件名下载代理链接(GitHub 资产名锁 ASCII,代理经 Content-Disposition 落中文名)
+          { cat CHANGELOG.md; echo; echo "📦 中文文件名下载: https://fudai-auth.pages.dev/dl/sparks/$TAG/Relaxin"; } > /tmp/notes.md
           gh release create "$TAG" \
             --repo liudubin/douyin-sparks-helper \
             --title "AI续火花助手 v${VER}" \
-            --notes-file CHANGELOG.md || true
+            --notes-file /tmp/notes.md || true
           gh release upload "$TAG" sparkshelper-*.deb --repo liudubin/douyin-sparks-helper --clobber
           # GitHub 会把资产文件名里的非 ASCII 清洗成点,中文只能放 label 展示
           for scheme in Relaxin Dopamine; do
@@ -99,7 +101,7 @@ jobs:
           gh release create "$TAG" \
             --repo liudubin/fudai-ci \
             --title "AI续火花助手 v${VER}" \
-            --notes-file CHANGELOG.md || true
+            --notes-file /tmp/notes.md || true
           gh release upload "$TAG" sparkshelper-*.deb --repo liudubin/fudai-ci --clobber
           for scheme in Relaxin Dopamine; do
             aid=$(gh api "repos/liudubin/fudai-ci/releases/tags/$TAG" \
