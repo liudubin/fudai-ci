@@ -1,0 +1,23 @@
+name: Validate Sparks authorization
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Source tag or branch
+        required: true
+        default: main
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out private source
+        uses: actions/checkout@v4
+        with:
+          repository: liudubin/douyin-sparks-helper
+          ref: ${{ inputs.ref }}
+          token: ${{ secrets.SRC_TOKEN }}
+          persist-credentials: false
+      - name: Test license time and status boundaries
+        run: cc -std=c11 -Wall -Wextra -Werror tests/license_policy.c -lm -o /tmp/license-policy && /tmp/license-policy
