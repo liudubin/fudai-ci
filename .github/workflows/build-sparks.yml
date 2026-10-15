@@ -75,7 +75,7 @@ jobs:
           VER=$(grep '^Version:' control | awk '{print $2}')
           TAG="${{ inputs.tag }}"
           # 附加中文文件名下载代理链接(GitHub 资产名锁 ASCII,代理经 Content-Disposition 落中文名)
-          { cat CHANGELOG.md; echo; echo "📦 中文文件名下载: https://fudai-auth.pages.dev/dl/sparks/$TAG/Relaxin"; } > /tmp/notes.md
+          { cat CHANGELOG.md; echo; echo "📦 中文文件名下载:"; echo "- Relaxin: https://fudai-auth.pages.dev/dl/sparks/$TAG/Relaxin"; echo "- Dopamine: https://fudai-auth.pages.dev/dl/sparks/$TAG/Dopamine"; } > /tmp/notes.md
           gh release create "$TAG" \
             --repo liudubin/douyin-sparks-helper \
             --title "AI续火花助手 v${VER}" \
